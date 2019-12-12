@@ -12,23 +12,33 @@ inquirer
         name: "username"
     })
     .then(function ({ username }) {
-        const queryUrl = `https://api.github.com/users/${username}/repos?per_page=100`;
+        getRepoLength = () => {
+            const queryRepoUrl = `https://api.github.com/users/${username}/repos`;
 
-        axios.get(queryUrl).then(function (res) {
-            const repoNames = res.data.map(function (repo) {
-                return repo.name;
-            });
+            axios.get(queryRepoUrl).then(function (res) {
+                const repoLength = res.data.length;
+                return repoLength;
+            })
+                .then(function (result) {
+                    console.log('WE DID IT ' + result)
+                })
+        }
 
-            const repoNamesStr = repoNames.join("\n");
+        getFollowers = () => {
+            const queryUrl = `https://api.github.com/users/${username}`;
 
-            fs.writeFile("repos.txt", repoNamesStr, function (err) {
-                if (err) {
-                    throw err;
-                }
+            axios.get(queryUrl).then(function (res) {
+                const arr = [res.data.followers, res.data.following];
+                return arr;
+            })
+                .then(function (result) {
+                    console.log('followers ' + result[0])
+                    console.log('following ' + result[1])
+                })
+        }
 
-                console.log(`Saved ${repoNames.length} repos`);
-            });
-        });
+        getRepoLength();
+        getFollowers();
     });
 
 // //////////////////////////////////////////////////////
