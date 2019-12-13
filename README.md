@@ -1,5 +1,6 @@
 # githubUserInfoToPDF
-# Luke Olson
+
+Luke Olson
 
 Takes user's GitHub username and favorite color to create a PDF document which shows
     the user's name,
