@@ -1,111 +1,122 @@
 // * Your application should prompt the user for information such as their
 // name, location, bio, LinkedIn URL, and GitHub URL.
 
-const axios = require("axios");
 const inquirer = require("inquirer");
-var fs = require('fs');
-const util = require("util");
+const axios = require("axios");
+const pdf = require('html-pdf');
 
-inquirer
-    .prompt({
-        message: "Enter your GitHub username:",
-        name: "username"
-    })
-    .then(function ({ username }) {
-        getRepoLength = () => {
-            const queryRepoUrl = `https://api.github.com/users/${username}/repos`;
+class Program {
+    constructor() {
+        this.githubUserName = null;
+        this.color = null;
+    }
 
-            axios.get(queryRepoUrl).then(function (res) {
-                const repoLength = res.data.length;
-                return repoLength;
+    promptUser() {
+        return inquirer.prompt([
+            {
+                message: 'What is your user name',
+                name: 'githubUserName'
+            }
+        ]).then(({ githubUserName }) => {
+            this.githubUserName = githubUserName;
+            this.makeApiRequest();
+        })
+    }
+
+    makeApiRequest() {
+        return Promise.all(
+            [
+                axios.get(`https://api.github.com/users/${this.githubUserName}`),
+                axios.get(`https://api.github.com/users/${this.githubUserName}/starred`)
+            ])
+            .then((
+                [
+                    {
+                        data:
+                        {
+                            avatar_url,
+                            location,
+                            name,
+                            blog,
+                            bio,
+                            public_repos,
+                            followers,
+                            following
+                        }
+                    },
+                    {
+                        data:
+                        {
+                            length
+                        }
+                    }
+                ]
+            ) => {
+                this.avatar_url = avatar_url;
+                this.location = location;
+                this.name = name;
+                this.blog = blog;
+                this.bio = bio;
+                this.public_repos = public_repos;
+                this.followers = followers;
+                this.following = following;
+                this.stars = length;
+                console.log(this);
+                this.createHtml();
             })
-                .then(function (result) {
-                    console.log('WE DID IT ' + result)
-                })
-        }
+    }
 
-        getFollowers = () => {
-            const queryUrl = `https://api.github.com/users/${username}`;
+    createHtml() {
+        this.html = `
+        <!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="X-UA-Compatible" content="ie=edge">
+            <title>GitHubPortfolio</title>
+        </head>
+        
+        <style>
+            body {
+                background-color: powderblue;
+            }
+        
+            div.intro {
+                background-color: grey;
+                text-align: center;
+                margin-top: 50px;
+                margin-left: 200px;
+                margin-right: 200px;
+            }
+        </style>
+        
+        <body>
+        
+            <body>
+                <div class="intro">
+                    <img src="${this.avatar_url}" alt="GitHub Avatar" height="200" width="200" style="
+                    padding-top: 50px;">
+                    <h1 style="font-size:30px;">Hi!</h1>
+                    <h2>My Name is ${this.name}!</h2>
+                </div>
+            </body>
+        
+        </html>
+    `;
+        console.log(this);
+        this.createPdf();
+    }
 
-            axios.get(queryUrl).then(function (res) {
-                const arr = [res.data.followers, res.data.following];
-                return arr;
-            })
-                .then(function (result) {
-                    console.log('followers ' + result[0])
-                    console.log('following ' + result[1])
-                })
-        }
+    createPdf() {
+        pdf.create(this.html).toFile('./class-test.pdf', function (err, res) {
+            if (err) return console.log(err);
+            console.log(res);
+        });
+    }
 
-        getRepoLength();
-        getFollowers();
-    });
+}
 
-// //////////////////////////////////////////////////////
-// const writeFileAsync = util.promisify(fs.writeFile);
-
-// function getUserData() {
-//     return inquirer.prompt([
-//         {
-//             type: "input",
-//             message: "Enter Your Name:",
-//             name: "userName"
-//         },
-//         {
-//             type: "input",
-//             message: "Enter Your Location:",
-//             name: "userLocation"
-//         },
-
-//         {
-//             type: "input",
-//             message: "Enter Your LinkedIn URL:",
-//             name: "userLinkedIn"
-//         },
-
-//         {
-//             type: "input",
-//             message: "Enter Your GitHub URL:",
-//             name: "userGitHub"
-//         }
-//     ]);
-// }
-
-
-// function generateHTML(answers) {
-//     const markup = `
-// <!DOCTYPE html>
-// <html lang="en">
-
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-//     <title>Template Literals</title>
-// </head>
-
-// <body>
-// <div class="portfolio">
-// <h1 style="font-size:30px;">${answers.userName}</h1>
-// <h2>${answers.userLocation}</h2>
-// <p style="font-size:20px;">${answers.userLinkedIn}</p>
-// <p style="font-size:20px;">${answers.userGitHub}</p>
-// </div>
-// </body>
-
-// </html>
-// `;
-//     return markup;
-// };
-
-// getUserData()
-//     .then(function (answers) {
-//         const html = generateHTML(answers);
-//         return writeFileAsync("index.html", html);
-//     })
-//     .then(function () {
-//         console.log('success');
-//     })
-//     .catch(function (err) {
-//         console.log(err);
-//     });
+var newProgram = new Program();
+newProgram.promptUser();
