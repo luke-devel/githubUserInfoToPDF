@@ -1,7 +1,5 @@
 # githubUserInfoToPDF
 
-Luke Olson
-
 Takes user's GitHub username and favorite color to create a PDF document which shows
     the user's name,
     occupation, 
@@ -22,3 +20,5 @@ Instructions:
     4. Enter your GitHub username
     5. Enter your favorite color (which will be the background)
     6. Open the generated PDF file which will be named 'pdf-output.pdf'
+
+Luke Olson, 2019
